@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Skin Disease Predictor</title>
+
+  <!-- Colors + Typography inside -->
+  <style>
+    :root{
+      --bg: #0f172a;                /* slate-900 */
+      --card: #0b2246;              /* deep blue */
+      --accent: #22d3ee;            /* cyan */
+      --accent-2:#a78bfa;           /* purple */
+      --accent-3:#34d399;           /* green */
+      --text: #e5e7eb;              /* slate-200 */
+      --muted:#94a3b8;              /* slate-400 */
+      --danger:#ef4444;
+      --gradient: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 50%, var(--accent-3) 100%);
+    }
+
+    * { box-sizing: border-box; }
+    html,body { height:100%; }
+    body{
+      margin:0;
+      background:
+        radial-gradient(1200px 800px at 10% -10%, rgba(34,211,238,.15), transparent 60%),
+        radial-gradient(1200px 800px at 110% 0%, rgba(167,139,250,.15), transparent 60%),
+        radial-gradient(900px 700px at 50% 120%, rgba(52,211,153,.12), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+      display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+
+    .container{
+      width: 100%;
+      max-width: 980px;
+    }
+
+    .header{
+      display:flex; align-items:center; gap:16px; margin-bottom:20px;
+    }
+
+    .logo{
+      width:56px; height:56px; border-radius:16px;
+      background: var(--gradient); display:grid; place-items:center;
+      box-shadow: 0 10px 30px rgba(34,211,238,.25), 0 4px 14px rgba(167,139,250,.25);
+    }
+    .logo svg{ width:30px; height:30px; fill:#0b1220; }
+
+    h1{ margin:0; font-size: clamp(22px, 2.6vw, 36px); letter-spacing:.2px; }
+    .subtitle{ color: var(--muted); margin-top:4px; }
+
+    .grid{
+      display:grid; gap:20px;
+      grid-template-columns: 1.1fr .9fr;
+    }
+    @media (max-width: 880px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:20px; padding:20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      backdrop-filter: blur(6px);
+    }
+
+    /* Dropzone */
+    .dropzone{
+      border:2px dashed rgba(255,255,255,.22);
+      border-radius:18px;
+      padding:22px;
+      text-align:center;
+      transition:.2s border-color, .2s background;
+      background: rgba(11,34,70,.35);
+      cursor: pointer;
+    }
+    .dropzone.dragover{
+      border-color: transparent;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
+        radial-gradient(80% 100% at 50% -10%, rgba(34,211,238,.25), transparent 60%),
+        rgba(11,34,70,.45);
+    }
+
+    .dz-icon{
+      width:72px; height:72px; margin:8px auto 12px;
+      border-radius:20px; background: var(--gradient); display:grid; place-items:center;
+      box-shadow: 0 10px 30px rgba(34,211,238,.25), 0 4px 14px rgba(167,139,250,.25);
+    }
+    .dz-icon svg{ width:38px; height:38px; fill:#0b1220; }
+
+    .dz-title{ font-size:18px; font-weight:700; }
+    .dz-sub{ color: var(--muted); margin-top:6px; }
+    .dz-actions{ margin-top:16px; display:flex; gap:10px; justify-content:center; flex-wrap: wrap; }
+
+    .btn{
+      appearance:none; border:0; cursor:pointer;
+      padding:12px 16px; border-radius:14px; font-weight:700;
+      transition: transform .06s ease, box-shadow .2s ease, opacity .2s ease;
+    }
+    .btn-primary{ background: var(--gradient); color:#0b1220; box-shadow: 0 8px 24px rgba(34,211,238,.25); }
+    .btn-ghost{ background: rgba(255,255,255,.06); color: var(--text); border:1px solid rgba(255,255,255,.12); }
+    .btn:active{ transform: translateY(1px); }
+
+    .preview{
+      margin-top:16px; display:grid; gap:12px;
+      grid-template-columns: 120px 1fr; align-items:center;
+    }
+    @media (max-width: 520px){ .preview{ grid-template-columns: 1fr; } }
+
+    .thumb{
+      width:120px; height:120px; border-radius:14px; overflow:hidden;
+      background:#0a1a33; border:1px solid rgba(255,255,255,.1);
+      display:grid; place-items:center;
+    }
+    .thumb img{ width:100%; height:100%; object-fit:cover; display:none; }
+    .meta{ font-size:14px; color: var(--muted); }
+    .meta strong{ color: var(--text); }
+
+    /* Results */
+    .results .title{
+      display:flex; align-items:center; gap:10px; margin-bottom:12px;
+      font-weight:800; letter-spacing:.2px;
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06); font-size:13px; color:var(--text);
+    }
+    .stat{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px; border-radius:14px; margin-top:10px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .stat .kpi{ font-weight:900; font-size:18px; }
+    .muted{ color: var(--muted); }
+
+    .footer{
+      margin-top:18px; text-align:center; color: var(--muted); font-size:12px;
+    }
+
+    /* Hide native file input but keep accessibility */
+    input[type=file]{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo" aria-hidden="true">
+        <!-- Medical cross + heart pulse icon (inline SVG) -->
+        <svg viewBox="0 0 24 24">
+          <path d="M19 3h-4a1 1 0 0 0-1 1v2h-4V4a1 1 0 0 0-1-1H5a2 2 0 0 0-2 2v4a1 1 0 0 0 1 1h2v4H4a1 1 0 0 0-1 1v4c0 1.1.9 2 2 2h4a1 1 0 0 0 1-1v-2h4v2a1 1 0 0 0 1 1h4a2 2 0 0 0 2-2v-4a1 1 0 0 0-1-1h-2v-4h2a1 1 0 0 0 1-1V5a2 2 0 0 0-2-2Z"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Skin Disease Prediction</h1>
+        <div class="subtitle">Modern, colorful, and patient-friendly interface for uploading dermoscopy photos and viewing results.</div>
+      </div>
+    </div>
+
+    <form class="grid" action="{{ url_for('upload_image') }}" method="POST" enctype="multipart/form-data">
+      <!-- Left: Uploader -->
+      <div class="card">
+        <label for="file" class="dropzone" id="dropzone" aria-label="Upload image by clicking or dragging">
+          <div class="dz-icon" aria-hidden="true">
+            <!-- Camera/Upload icon -->
+            <svg viewBox="0 0 24 24">
+              <path d="M12 5l4 4h-3v6h-2V9H8l4-4zm-6 14h12a2 2 0 002-2v-5h-2v5H6v-5H4v5a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <div class="dz-title">Drop image here</div>
+          <div class="dz-sub">or</div>
+          <div class="dz-actions">
+            <button class="btn btn-primary" type="button" id="browseBtn">Choose Image</button>
+            <span class="badge">
+              <!-- Stethoscope icon -->
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 2a1 1 0 0 0-1 1v4a3 3 0 1 0 6 0V3a1 1 0 1 0-2 0v4a1 1 0 1 1-2 0V3a1 1 0 0 0-1-1zm-3 8a5 5 0 0 0 10 0V8h2v2a7 7 0 0 1-6 6.92V19a3 3 0 1 0 6 0v-1h2v1a5 5 0 1 1-10 0v-2.08A7 7 0 0 1 2 10V8h2v2zM20 8a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+              Medical-grade preview
+            </span>
+          </div>
+          <input id="file" name="image" type="file" accept="image/*" />
+        </label>
+
+        <!-- Live preview -->
+        <div class="preview" id="preview" hidden>
+          <div class="thumb"><img id="thumb" alt="Image preview"></div>
+          <div class="meta" id="meta"></div>
+        </div>
+
+        <!-- Submit -->
+        <div style="display:flex; gap:12px; margin-top:16px;">
+          <button class="btn btn-primary" type="submit">Analyze Image</button>
+          <button class="btn btn-ghost" type="button" id="clearBtn">Clear</button>
+        </div>
+      </div>
+
+      <!-- Right: Results -->
+      <div class="card results">
+        <div class="title">
+          <!-- Heart pulse icon -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-6.716-4.592-9.193-8.284C.724 10.124 2.07 6 6.11 6c2.02 0 3.43 1.32 3.89 2.02C10.46 7.32 11.87 6 13.89 6c4.04 0 5.386 4.124 3.303 6.716C18.716 16.408 12 21 12 21z"/></svg>
+          Results
+        </div>
+
+        <!-- Show server-side result if available -->
+        {% if prediction %}
+          <div class="stat">
+            <div>
+              <div class="muted">Predicted Output</div>
+              <div class="kpi">{{ prediction }}</div>
+            </div>
+            <span class="badge">Model</span>
+          </div>
+        {% else %}
+          <div class="stat">
+            <div>
+              <div class="muted">Awaiting upload</div>
+              <div class="kpi">—</div>
+            </div>
+            <span class="badge">Idle</span>
+          </div>
+        {% endif %}
+
+        {% if filename %}
+          <div class="stat">
+            <div>
+              <div class="muted">Last file</div>
+              <div class="kpi">{{ filename }}</div>
+            </div>
+            <span class="badge">Uploaded</span>
+          </div>
+        {% endif %}
+
+        <div class="footer">For educational use. Not a substitute for professional diagnosis.</div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Interactions -->
+  <script>
+    const fileInput = document.getElementById('file');
+    const dropzone  = document.getElementById('dropzone');
+    const browseBtn = document.getElementById('browseBtn');
+    const clearBtn  = document.getElementById('clearBtn');
+    const preview   = document.getElementById('preview');
+    const thumb     = document.getElementById('thumb');
+    const meta      = document.getElementById('meta');
+
+    // Click to browse
+    browseBtn.addEventListener('click', () => fileInput.click());
+
+    // Drag & drop
+    ['dragenter','dragover'].forEach(ev =>
+      dropzone.addEventListener(ev, (e)=>{ e.preventDefault(); e.stopPropagation(); dropzone.classList.add('dragover'); })
+    );
+    ['dragleave','drop'].forEach(ev =>
+      dropzone.addEventListener(ev, (e)=>{ e.preventDefault(); e.stopPropagation(); dropzone.classList.remove('dragover'); })
+    );
+    dropzone.addEventListener('drop', (e)=>{
+      const dt = e.dataTransfer;
+      if (dt && dt.files && dt.files[0]) {
+        fileInput.files = dt.files; // attach dropped file to input
+        updatePreview(dt.files[0]);
+      }
+    });
+
+    // On manual file pick
+    fileInput.addEventListener('change', (e)=>{
+      const f = e.target.files?.[0];
+      if (f) updatePreview(f);
+    });
+
+    // Clear selection
+    clearBtn.addEventListener('click', ()=>{
+      fileInput.value = '';
+      preview.hidden = true;
+      thumb.src = '';
+      meta.textContent = '';
+    });
+
+    function updatePreview(file){
+      if (!file.type.startsWith('image/')) {
+        alert('Please choose an image file.');
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      thumb.style.display = 'block';
+      thumb.src = url;
+      preview.hidden = false;
+      meta.innerHTML = `
+        <div><strong>Name:</strong> ${file.name}</div>
+        <div><strong>Size:</strong> ${(file.size/1024).toFixed(1)} KB</div>
+        <div><strong>Type:</strong> ${file.type}</div>
+      `;
+    }
+  </script>
+</body>
+</html>
